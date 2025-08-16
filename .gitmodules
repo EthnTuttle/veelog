@@ -1,0 +1,6 @@
+[submodule "reference/primal-android"]
+	path = reference/primal-android
+	url = https://github.com/PrimalHQ/primal-android-app.git
+[submodule "reference/amethyst"]
+	path = reference/amethyst
+	url = https://github.com/vitorpamplona/amethyst

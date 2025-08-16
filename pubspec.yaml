@@ -1,0 +1,126 @@
+name: veelog
+description: A simple nostr vlogging application for short clips
+version: 0.1.0
+
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+
+environment:
+  sdk: ^3.8.1
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_riverpod: ^2.6.1
+  flutter_hooks: ^0.21.2
+  path_provider: ^2.1.5
+  go_router: ^16.0.0
+  async_button_builder: ^3.0.0+1
+  sqlite3_flutter_libs: ^0.5.34
+  cached_network_image: ^3.4.1
+  skeletonizer: ^2.1.0+1
+  dart_emoji: ^0.2.0+2
+  easy_image_viewer: ^1.5.1
+  models: ^0.3.3
+  purplebase: ^0.3.3
+  amber_signer: ^0.2.0
+  hooks_riverpod: ^2.6.1
+  path: ^1.9.1
+  google_fonts: ^6.2.1
+  fluttertoast: ^8.2.12
+  table_calendar: ^3.2.0
+  any_link_preview: ^3.0.3
+  http: ^1.2.1
+  url_launcher: ^6.3.0
+  flutter_markdown: ^0.7.7+1
+  auto_size_text: ^3.0.0
+  percent_indicator: ^4.2.5
+  flutter_layout_grid: ^2.0.8
+  chewie: ^1.8.5
+  video_player: ^2.9.2
+  just_audio: ^0.9.42
+  args: ^2.7.0
+  camera: ^0.11.2
+  permission_handler: ^12.0.1
+  crypto: ^3.0.6
+  mime: ^2.0.0
+  video_compress: ^3.1.4
+
+dependency_overrides:
+  models:
+    # path: ../models
+    git:
+      url: https://github.com/purplebase/models
+      ref: main
+  purplebase:
+    # path: ../purplebase
+    git:
+      url: https://github.com/purplebase/purplebase
+      ref: master
+  amber_signer:
+    # path: ../amber_signer
+    git:
+      url: https://github.com/purplebase/amber_signer
+      ref: main
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^5.0.0
+  icons_launcher: ^3.0.1
+  bm25: ^2.2.3
+  archive: ^4.0.7
+  mcp_dart: ^0.5.3
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/icon/
+    - assets/images/
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package

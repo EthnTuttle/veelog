@@ -1,0 +1,20 @@
+{
+  "name": "purplestack",
+  "title": "Purplestack",
+  "description": "Agentic development stack for building Nostr-enabled Flutter applications",
+  "image": "https://raw.githubusercontent.com/purplebase/purplestack/refs/heads/main/assets/images/purplestack.png",
+  "commands": [
+    "npx",
+    "dart",
+    "flutter"
+  ],
+  "uri": "git+https://github.com/purplebase/purplestack.git",
+  "tech": [
+    "flutter",
+    "dart",
+    "purplebase",
+    "models",
+    "material",
+    "riverpod"
+  ]
+}
