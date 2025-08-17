@@ -180,9 +180,9 @@ class BlossomService {
         throw BlossomException('User must be authenticated to create video notes');
       }
 
-      // Create NIP-71 short-form portrait video (kind 22)
+      // Create NIP-71 short-form portrait video (kind 22) with proper imeta tags
       final shortVideo = PartialShortFormPortraitVideo(
-        videoUrl: uploadResult.url,
+        videoUrl: uploadResult.url, // This sets basic url tag for compatibility
         description: description.isNotEmpty ? description : 'Video log',
         title: description.isNotEmpty ? description : 'VeeLog Video',
         hashtags: {'veelog', 'video'},
@@ -191,15 +191,25 @@ class BlossomService {
         videoHash: uploadResult.sha256,
       );
 
+      // Add proper NIP-71 imeta tag with bundled metadata
+      final imetaParams = <String>[
+        'url ${uploadResult.url}',
+        'x ${uploadResult.sha256}',
+        'm ${uploadResult.mimeType}',
+        'size ${uploadResult.size}',
+        'service blossom',
+      ];
+      shortVideo.event.addTag('imeta', imetaParams);
+
       // Sign the video event first
       final signedVideoEvents = await activeSigner.sign([shortVideo]);
       final signedVideoEvent = signedVideoEvents.first;
 
-      // Create kind 1 note that references the video event
+      // Create kind 1 note that references the video event and includes the blossom URL
       final neventId = Utils.encodeShareableIdentifier(EventInput(eventId: signedVideoEvent.event.id));
       final noteContent = description.isNotEmpty 
-          ? '$description\n\nnostr:$neventId'
-          : 'New video log\n\nnostr:$neventId';
+          ? '$description\n\n${uploadResult.url}\n\nnostr:$neventId'
+          : 'New video log\n\n${uploadResult.url}\n\nnostr:$neventId';
 
       final partialNote = PartialNote(
         noteContent,
