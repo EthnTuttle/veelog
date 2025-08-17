@@ -13,6 +13,7 @@ class VideoRecordingScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cameraController = useState<CameraController?>(null);
     final isRecording = useState(false);
+    final isPaused = useState(false);
     final recordingTime = useState(0);
     final isInitialized = useState(false);
     final permissionGranted = useState(false);
@@ -26,19 +27,17 @@ class VideoRecordingScreen extends HookConsumerWidget {
 
     useEffect(() {
       Timer? timer;
-      if (isRecording.value) {
+      if (isRecording.value && !isPaused.value) {
         timer = Timer.periodic(const Duration(seconds: 1), (timer) {
           recordingTime.value++;
           if (recordingTime.value >= 30) { // Reduced from 60 to 30 seconds
-            _stopRecording(cameraController.value, isRecording, recordingTime, context);
+            _stopRecording(cameraController.value, isRecording, isPaused, recordingTime, context);
             timer.cancel();
           }
         });
-      } else {
-        recordingTime.value = 0;
       }
       return () => timer?.cancel();
-    }, [isRecording.value]);
+    }, [isRecording.value, isPaused.value]);
 
     if (!permissionGranted.value) {
       return Scaffold(
@@ -127,7 +126,7 @@ class VideoRecordingScreen extends HookConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.red,
+                  color: isPaused.value ? Colors.orange : Colors.red,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -143,7 +142,9 @@ class VideoRecordingScreen extends HookConsumerWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${recordingTime.value}s / 30s',
+                      isPaused.value 
+                          ? 'PAUSED ${recordingTime.value}s / 30s'
+                          : '${recordingTime.value}s / 30s',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -162,30 +163,39 @@ class VideoRecordingScreen extends HookConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Gallery button
-                IconButton(
-                  onPressed: () => context.pop(),
-                  icon: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(8),
+                // Pause/Resume button (only visible when recording)
+                if (isRecording.value)
+                  IconButton(
+                    onPressed: () {
+                      if (isPaused.value) {
+                        _resumeRecording(cameraController.value, isPaused);
+                      } else {
+                        _pauseRecording(cameraController.value, isPaused);
+                      }
+                    },
+                    icon: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        isPaused.value ? Icons.play_arrow : Icons.pause,
+                        color: Colors.white,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.photo_library,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                  )
+                else
+                  const SizedBox(width: 48), // Placeholder to maintain spacing
                 
                 // Record button
                 GestureDetector(
                   onTap: () {
                     if (isRecording.value) {
-                      _stopRecording(cameraController.value, isRecording, recordingTime, context);
+                      _stopRecording(cameraController.value, isRecording, isPaused, recordingTime, context);
                     } else {
-                      _startRecording(cameraController.value, isRecording);
+                      _startRecording(cameraController.value, isRecording, isPaused);
                     }
                   },
                   child: Container(
@@ -280,20 +290,51 @@ class VideoRecordingScreen extends HookConsumerWidget {
   Future<void> _startRecording(
     CameraController? controller,
     ValueNotifier<bool> isRecording,
+    ValueNotifier<bool> isPaused,
   ) async {
     if (controller == null || !controller.value.isInitialized) return;
 
     try {
       await controller.startVideoRecording();
       isRecording.value = true;
+      isPaused.value = false;
     } catch (e) {
       debugPrint('Error starting recording: $e');
+    }
+  }
+
+  Future<void> _pauseRecording(
+    CameraController? controller,
+    ValueNotifier<bool> isPaused,
+  ) async {
+    if (controller == null || !controller.value.isRecordingVideo) return;
+
+    try {
+      await controller.pauseVideoRecording();
+      isPaused.value = true;
+    } catch (e) {
+      debugPrint('Error pausing recording: $e');
+    }
+  }
+
+  Future<void> _resumeRecording(
+    CameraController? controller,
+    ValueNotifier<bool> isPaused,
+  ) async {
+    if (controller == null || !controller.value.isRecordingPaused) return;
+
+    try {
+      await controller.resumeVideoRecording();
+      isPaused.value = false;
+    } catch (e) {
+      debugPrint('Error resuming recording: $e');
     }
   }
 
   Future<void> _stopRecording(
     CameraController? controller,
     ValueNotifier<bool> isRecording,
+    ValueNotifier<bool> isPaused,
     ValueNotifier<int> recordingTime,
     BuildContext context,
   ) async {
@@ -302,6 +343,7 @@ class VideoRecordingScreen extends HookConsumerWidget {
     try {
       final videoFile = await controller.stopVideoRecording();
       isRecording.value = false;
+      isPaused.value = false;
       recordingTime.value = 0;
       
       // Navigate to video preview screen

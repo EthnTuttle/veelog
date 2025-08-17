@@ -171,41 +171,50 @@ class BlossomService {
     required BlossomUploadResult uploadResult,
     List<String> hashtags = const [],
   }) async {
-    // Check if user is authenticated
-    final authState = ref.read(authProvider);
-    if (!authState.isAuthenticated) {
-      throw BlossomException('User must be authenticated to create video notes');
-    }
-
     try {
-      // Create content with video URL
-      final content = description.isNotEmpty 
-          ? '$description\n\n${uploadResult.url}'
-          : uploadResult.url;
-
-      // Combine all tags (include video metadata)
-      final allTags = <String>[
-        ...hashtags.map((tag) => 't $tag'),
-        'imeta', // Mark as having media metadata
-      ];
-
-      final partialNote = PartialNote(
-        content,
-        tags: {...allTags, ...hashtags},
-      );
-
-      // Sign and save the note
+      // Check if user is authenticated by verifying active signer and pubkey
       final activeSigner = ref.read(Signer.activeSignerProvider);
-      if (activeSigner != null) {
-        final signedNotes = await activeSigner.sign([partialNote]);
-        await ref.storage.save(signedNotes.toSet());
-        await ref.storage.publish(signedNotes.toSet());
-      } else {
-        throw BlossomException('No active signer available for creating video note');
+      final activePubkey = ref.read(Signer.activePubkeyProvider);
+      
+      if (activeSigner == null || activePubkey == null) {
+        throw BlossomException('User must be authenticated to create video notes');
       }
 
-      // The note will be available in storage after saving
-      // UI will update via providers
+      // Create NIP-71 short-form portrait video (kind 22)
+      final shortVideo = PartialShortFormPortraitVideo(
+        videoUrl: uploadResult.url,
+        description: description.isNotEmpty ? description : 'Video log',
+        title: description.isNotEmpty ? description : 'VeeLog Video',
+        hashtags: {'veelog', 'video'},
+        mimeType: uploadResult.mimeType,
+        fileSize: uploadResult.size,
+        videoHash: uploadResult.sha256,
+      );
+
+      // Sign the video event first
+      final signedVideoEvents = await activeSigner.sign([shortVideo]);
+      final signedVideoEvent = signedVideoEvents.first;
+
+      // Create kind 1 note that references the video event
+      final neventId = Utils.encodeShareableIdentifier(EventInput(eventId: signedVideoEvent.event.id));
+      final noteContent = description.isNotEmpty 
+          ? '$description\n\nnostr:$neventId'
+          : 'New video log\n\nnostr:$neventId';
+
+      final partialNote = PartialNote(
+        noteContent,
+        tags: {'veelog'}, // Single hashtag as requested
+      );
+
+      // Sign the referencing note
+      final signedNotes = await activeSigner.sign([partialNote]);
+
+      // Save and publish both events
+      final allEvents = {...signedVideoEvents, ...signedNotes};
+      await ref.storage.save(allEvents);
+      await ref.storage.publish(allEvents);
+
+      debugPrint('Published NIP-71 video event (kind 22) and referencing note (kind 1)');
     } catch (e) {
       throw BlossomException('Failed to create video note: $e');
     }
