@@ -7,8 +7,8 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:purplebase/purplebase.dart';
 import 'package:veelog/router.dart';
-import 'package:veelog/theme.dart';
 import 'package:veelog/providers/auth_provider.dart';
+import 'package:veelog/providers/theme_provider.dart';
 
 void main() {
   runZonedGuarded(() {
@@ -37,7 +37,13 @@ class VeelogApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = 'VeeLog';
-    final theme = ref.watch(themeProvider);
+    final appTheme = ref.watch(themeProvider);
+    final theme = switch (appTheme) {
+      AppTheme.wood => AppThemes.woodTheme,
+      AppTheme.freedom => AppThemes.freedomTheme,
+      AppTheme.nostr => AppThemes.nostrTheme,
+      AppTheme.bitcoin => AppThemes.bitcoinTheme,
+    };
 
     return switch (ref.watch(appInitializationProvider)) {
       AsyncLoading() => MaterialApp(

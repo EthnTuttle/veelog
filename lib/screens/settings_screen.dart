@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:veelog/providers/auth_provider.dart';
+import 'package:veelog/providers/display_settings_provider.dart';
 import 'package:veelog/widgets/common/profile_avatar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:models/models.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -138,19 +140,16 @@ class SettingsScreen extends ConsumerWidget {
                 context,
                 icon: Icons.palette,
                 title: 'Theme',
-                subtitle: 'Wood theme active',
-                onTap: () {
-                  // TODO: Theme settings
-                },
+                subtitle: 'Customize app appearance',
+                onTap: () => context.push('/settings/theme'),
               ),
+              _buildDisplayModeTile(context, ref),
               _buildSettingsTile(
                 context,
                 icon: Icons.videocam,
                 title: 'Video Quality',
-                subtitle: 'High quality recording',
-                onTap: () {
-                  // TODO: Video settings
-                },
+                subtitle: 'Requires NIP-05 verification',
+                onTap: () => context.push('/settings/video-quality'),
               ),
               _buildSettingsTile(
                 context,
@@ -183,9 +182,7 @@ class SettingsScreen extends ConsumerWidget {
                 icon: Icons.code,
                 title: 'Source Code',
                 subtitle: 'View on GitHub',
-                onTap: () {
-                  // TODO: Open GitHub repo
-                },
+                onTap: () => _openGitHubRepo(),
               ),
               _buildSettingsTile(
                 context,
@@ -303,6 +300,89 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildDisplayModeTile(BuildContext context, WidgetRef ref) {
+    final currentMode = ref.watch(displayModeProvider);
+    
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF8B4513).withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(
+          Icons.view_list,
+          color: Color(0xFF654321),
+          size: 20,
+        ),
+      ),
+      title: const Text(
+        'Display Mode',
+        style: TextStyle(
+          color: Color(0xFF654321),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: Text(
+        _getDisplayModeLabel(currentMode),
+        style: TextStyle(
+          color: const Color(0xFF8B4513).withValues(alpha: 0.8),
+        ),
+      ),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        size: 16,
+        color: const Color(0xFF8B4513).withValues(alpha: 0.6),
+      ),
+      onTap: () => _showDisplayModeDialog(context, ref),
+    );
+  }
+
+  String _getDisplayModeLabel(DisplayMode mode) {
+    switch (mode) {
+      case DisplayMode.robust:
+        return 'Robust - Maximum details';
+      case DisplayMode.detailed:
+        return 'Detailed - Rich information';
+      case DisplayMode.compact:
+        return 'Compact - Minimal space';
+      case DisplayMode.standard:
+        return 'Standard - Balanced view';
+    }
+  }
+
+  void _showDisplayModeDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Display Mode'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: DisplayMode.values.map((mode) {
+            return RadioListTile<DisplayMode>(
+              title: Text(_getDisplayModeLabel(mode)),
+              value: mode,
+              groupValue: ref.read(displayModeProvider),
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(displayModeProvider.notifier).state = value;
+                  Navigator.of(context).pop();
+                }
+              },
+              activeColor: const Color(0xFF654321),
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _copyToClipboard(BuildContext context, String text, String message) {
     Clipboard.setData(ClipboardData(text: text));
     Fluttertoast.showToast(
@@ -310,5 +390,12 @@ class SettingsScreen extends ConsumerWidget {
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.BOTTOM,
     );
+  }
+  
+  void _openGitHubRepo() async {
+    const url = 'https://github.com/EthnTuttle/veelog';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
   }
 }

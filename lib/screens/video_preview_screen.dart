@@ -9,6 +9,7 @@ import 'package:async_button_builder/async_button_builder.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:veelog/services/blossom_service.dart';
+import 'package:veelog/providers/video_quality_provider.dart';
 
 class VideoPreviewScreen extends HookConsumerWidget {
   final String videoPath;
@@ -195,23 +196,42 @@ class VideoPreviewScreen extends HookConsumerWidget {
       final description = await _showDescriptionDialog(context);
       if (description == null) return; // User cancelled
       
-      // Compress video before uploading
-      debugPrint('Compressing video...');
-      final compressedInfo = await VideoCompress.compressVideo(
-        videoPath,
-        quality: VideoQuality.LowQuality,
-        deleteOrigin: false, // Keep original for now
-        includeAudio: true,
-      );
+      // Get quality setting and compress video
+      final qualityLevel = ref.read(videoQualityProvider);
+      final compressQuality = VideoQualitySettings.getVideoCompressQuality(qualityLevel);
       
-      if (compressedInfo == null) {
-        throw Exception('Video compression failed');
+      debugPrint('Compressing video with quality: $qualityLevel');
+      
+      MediaInfo? compressedInfo;
+      String compressedPath;
+      
+      if (qualityLevel == VideoQualityLevel.original) {
+        // Skip compression for original quality
+        compressedPath = videoPath;
+        debugPrint('Using original video without compression');
+      } else {
+        compressedInfo = await VideoCompress.compressVideo(
+          videoPath,
+          quality: compressQuality,
+          deleteOrigin: false,
+          includeAudio: true,
+        );
+        
+        if (compressedInfo == null) {
+          throw Exception('Video compression failed');
+        }
+        compressedPath = compressedInfo.path!;
       }
       
-      final compressedPath = compressedInfo.path!;
+      // Log compression results
       final originalSize = File(videoPath).lengthSync();
       final compressedSize = File(compressedPath).lengthSync();
-      debugPrint('Video compressed: ${(originalSize / 1024 / 1024).toStringAsFixed(1)}MB → ${(compressedSize / 1024 / 1024).toStringAsFixed(1)}MB');
+      
+      if (qualityLevel != VideoQualityLevel.original) {
+        debugPrint('Video compressed: ${(originalSize / 1024 / 1024).toStringAsFixed(1)}MB → ${(compressedSize / 1024 / 1024).toStringAsFixed(1)}MB');
+      } else {
+        debugPrint('Using original video: ${(originalSize / 1024 / 1024).toStringAsFixed(1)}MB');
+      }
       
       // Upload compressed video to Blossom server
       final blossomService = ref.read(blossomServiceProvider);
@@ -232,9 +252,12 @@ class VideoPreviewScreen extends HookConsumerWidget {
         await originalFile.delete();
       }
       
-      final compressedFile = File(compressedPath);
-      if (await compressedFile.exists()) {
-        await compressedFile.delete();
+      // Only delete compressed file if it's different from original
+      if (qualityLevel != VideoQualityLevel.original) {
+        final compressedFile = File(compressedPath);
+        if (await compressedFile.exists()) {
+          await compressedFile.delete();
+        }
       }
       
       Fluttertoast.showToast(
@@ -263,30 +286,183 @@ class VideoPreviewScreen extends HookConsumerWidget {
 
   Future<String?> _showDescriptionDialog(BuildContext context) async {
     final controller = TextEditingController();
+    final previewText = useState('');
     
     return showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Description'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'What\'s this video about?',
-            border: OutlineInputBorder(),
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Add Description'),
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: 400,
+            child: Column(
+              children: [
+                // Larger text input
+                Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    onChanged: (text) {
+                      setState(() {
+                        previewText.value = text;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'What\'s this video about?',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(12),
+                    ),
+                    maxLines: null,
+                    expands: true,
+                    maxLength: 280,
+                    textAlignVertical: TextAlignVertical.top,
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                
+                // Preview section
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Preview:',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        // Note preview
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kind 1 Note Content:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                previewText.value.isNotEmpty 
+                                    ? previewText.value 
+                                    : '[Video description]',
+                                style: TextStyle(
+                                  color: previewText.value.isNotEmpty ? Colors.black : Colors.grey[500],
+                                  fontStyle: previewText.value.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '[Video URL will be inserted here]',
+                                style: TextStyle(
+                                  color: Colors.blue[600],
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'nostr:[nevent reference]',
+                                style: TextStyle(
+                                  color: Colors.purple[600],
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 12),
+                        
+                        // Kind 22 preview
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.purple[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.purple[200]!),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kind 22 Short Video Event:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Colors.purple[700],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Title: ${previewText.value.isNotEmpty ? previewText.value : "VeeLog Video"}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              Text(
+                                'Description: ${previewText.value.isNotEmpty ? previewText.value : "Video log"}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              Text(
+                                'Tags: #veelog #video',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.purple[600],
+                                ),
+                              ),
+                              Text(
+                                'IMeta: [URL, hash, MIME type, size, service]',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          maxLines: 3,
-          maxLength: 280,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: const Text('Post'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('Post'),
-          ),
-        ],
       ),
     );
   }

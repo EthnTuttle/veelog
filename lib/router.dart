@@ -9,6 +9,9 @@ import 'package:veelog/screens/auth_screen.dart';
 import 'package:veelog/screens/profile_screen.dart';
 import 'package:veelog/screens/settings_screen.dart';
 import 'package:veelog/screens/blossom_settings_screen.dart';
+import 'package:veelog/screens/hashtag_screen.dart';
+import 'package:veelog/screens/video_quality_screen.dart';
+import 'package:veelog/screens/theme_settings_screen.dart';
 import 'package:veelog/providers/auth_provider.dart';
 import 'package:models/models.dart';
 
@@ -76,6 +79,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings/blossom',
         builder: (context, state) => const BlossomSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/hashtag/:hashtag',
+        builder: (context, state) {
+          final hashtag = state.pathParameters['hashtag']!;
+          return HashtagScreen(hashtag: hashtag);
+        },
+      ),
+      GoRoute(
+        path: '/settings/video-quality',
+        builder: (context, state) => const VideoQualityScreen(),
+      ),
+      GoRoute(
+        path: '/settings/theme',
+        builder: (context, state) => const ThemeSettingsScreen(),
       ),
     ],
     refreshListenable: GoRouterRefreshStream(ref),

@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 import 'package:models/models.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:veelog/providers/auth_provider.dart';
 import 'package:veelog/providers/blossom_config_provider.dart';
 
 class BlossomService {
@@ -203,18 +202,19 @@ class BlossomService {
 
       // Sign the video event first
       final signedVideoEvents = await activeSigner.sign([shortVideo]);
-      final signedVideoEvent = signedVideoEvents.first;
 
-      // Create kind 1 note that references the video event and includes the blossom URL
-      final neventId = Utils.encodeShareableIdentifier(EventInput(eventId: signedVideoEvent.event.id));
+      // Create independent kind 1 note with just the video URL and description
       final noteContent = description.isNotEmpty 
-          ? '$description\n\n${uploadResult.url}\n\nnostr:$neventId'
-          : 'New video log\n\n${uploadResult.url}\n\nnostr:$neventId';
+          ? '$description\n\n${uploadResult.url}'
+          : 'New video log\n\n${uploadResult.url}';
 
       final partialNote = PartialNote(
         noteContent,
-        tags: {'veelog'}, // Single hashtag as requested
+        tags: {'veelog', 'video'}, // Add video tag for filtering
       );
+      
+      // Add imeta tag to the note as well for better client compatibility
+      partialNote.event.addTag('imeta', imetaParams);
 
       // Sign the referencing note
       final signedNotes = await activeSigner.sign([partialNote]);
@@ -224,7 +224,7 @@ class BlossomService {
       await ref.storage.save(allEvents);
       await ref.storage.publish(allEvents);
 
-      debugPrint('Published NIP-71 video event (kind 22) and referencing note (kind 1)');
+      debugPrint('Published independent NIP-71 video event (kind 22) and video note (kind 1)');
     } catch (e) {
       throw BlossomException('Failed to create video note: $e');
     }

@@ -11,7 +11,7 @@ import 'package:veelog/widgets/common/engagement_row.dart';
 import 'package:veelog/widgets/common/note_parser.dart';
 
 class VideoDetailScreen extends HookConsumerWidget {
-  final Note videoNote;
+  final dynamic videoNote; // Can be Note or ShortFormPortraitVideo
 
   const VideoDetailScreen({
     super.key,
@@ -23,9 +23,19 @@ class VideoDetailScreen extends HookConsumerWidget {
     final currentUser = ref.watch(currentUserPubkeyProvider);
     final followingList = ref.watch(followingListProvider);
     
-    // Get all video notes for swipe navigation
-    final videosState = ref.watch(
+    // Get all video content for swipe navigation (both kinds)
+    final notesState = ref.watch(
       query<Note>(
+        authors: currentUser != null 
+            ? {...followingList, currentUser}
+            : followingList,
+        limit: 50,
+        source: LocalAndRemoteSource(stream: true),
+      ),
+    );
+    
+    final shortVideosState = ref.watch(
+      query<ShortFormPortraitVideo>(
         authors: currentUser != null 
             ? {...followingList, currentUser}
             : followingList,
@@ -40,16 +50,26 @@ class VideoDetailScreen extends HookConsumerWidget {
     final currentVideoIndex = useState(0);
 
     useEffect(() {
-      // Find all video notes and current video index
-      if (videosState is StorageData) {
-        final videoNotes = videosState.models.where(_hasVideoContent).toList();
-        final currentIndex = videoNotes.indexWhere((note) => note.id == videoNote.id);
+      // Combine and organize video content
+      if (notesState is StorageData && shortVideosState is StorageData) {
+        final videoNotes = notesState.models.where(_hasVideoContent).toList();
+        final allVideos = <dynamic>[];
+        allVideos.addAll(videoNotes);
+        allVideos.addAll(shortVideosState.models);
+        allVideos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        
+        final currentVideoId = videoNote is Note ? videoNote.id : (videoNote as ShortFormPortraitVideo).id;
+        final currentIndex = allVideos.indexWhere((video) {
+          if (video is Note) return video.id == currentVideoId;
+          if (video is ShortFormPortraitVideo) return video.id == currentVideoId;
+          return false;
+        });
         
         if (currentIndex >= 0) {
           currentVideoIndex.value = currentIndex;
           pageController.value = PageController(initialPage: currentIndex);
           
-          final videoUrl = _extractVideoUrl(videoNotes[currentIndex]);
+          final videoUrl = _getVideoUrl(allVideos[currentIndex]);
           if (videoUrl != null) {
             _initializeVideo(videoUrl, videoPlayerController, chewieController);
           }
@@ -61,7 +81,7 @@ class VideoDetailScreen extends HookConsumerWidget {
         videoPlayerController.value?.dispose();
         pageController.value?.dispose();
       };
-    }, [videosState]);
+    }, [notesState, shortVideosState]);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -74,14 +94,18 @@ class VideoDetailScreen extends HookConsumerWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: switch (videosState) {
-        StorageLoading() => const Center(child: CircularProgressIndicator()),
-        StorageError(:final exception) => Center(
-          child: Text('Error: ${exception.toString()}'),
+      body: switch ((notesState, shortVideosState)) {
+        (StorageLoading(), _) || (_, StorageLoading()) => const Center(child: CircularProgressIndicator()),
+        (StorageError(:final exception), _) => Center(
+          child: Text('Error loading notes: ${exception.toString()}'),
         ),
-        StorageData(:final models) => _buildSwipeableVideos(
+        (_, StorageError(:final exception)) => Center(
+          child: Text('Error loading videos: ${exception.toString()}'),
+        ),
+        (StorageData<Note>(:final models), StorageData<ShortFormPortraitVideo>(models: final videoModels)) => _buildSwipeableVideos(
           context, 
-          models.where(_hasVideoContent).toList(),
+          models, 
+          videoModels,
           pageController.value,
           currentVideoIndex,
           videoPlayerController,
@@ -126,143 +150,292 @@ class VideoDetailScreen extends HookConsumerWidget {
 
   Widget _buildSwipeableVideos(
     BuildContext context,
-    List<Note> videoNotes,
+    List<Note> noteModels,
+    List<ShortFormPortraitVideo> videoModels,
     PageController? pageController,
     ValueNotifier<int> currentVideoIndex,
     ValueNotifier<VideoPlayerController?> videoPlayerController,
     ValueNotifier<ChewieController?> chewieController,
   ) {
-    if (pageController == null || videoNotes.isEmpty) {
+    // Combine and organize videos by author
+    final videoNotes = noteModels.where(_hasVideoContent).toList();
+    final allVideos = <dynamic>[];
+    allVideos.addAll(videoNotes);
+    allVideos.addAll(videoModels);
+    allVideos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    
+    // Group videos by author for navigation
+    final videosByAuthor = <String, List<dynamic>>{};
+    for (final video in allVideos) {
+      final authorPubkey = video is Note ? (video.author.value?.pubkey ?? video.event.pubkey) : ((video as ShortFormPortraitVideo).author.value?.pubkey ?? video.event.pubkey);
+      videosByAuthor.putIfAbsent(authorPubkey, () => []).add(video);
+    }
+    
+    if (pageController == null || allVideos.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return PageView.builder(
-      controller: pageController,
-      onPageChanged: (index) {
-        currentVideoIndex.value = index;
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        // Swipe left/right for same author videos
+        final currentVideo = allVideos[currentVideoIndex.value];
+        final currentAuthor = currentVideo is Note ? (currentVideo.author.value?.pubkey ?? currentVideo.event.pubkey) : ((currentVideo as ShortFormPortraitVideo).author.value?.pubkey ?? currentVideo.event.pubkey);
+        final authorVideos = videosByAuthor[currentAuthor] ?? [];
         
-        // Initialize new video
-        final videoUrl = _extractVideoUrl(videoNotes[index]);
-        if (videoUrl != null) {
-          // Dispose previous controllers
-          chewieController.value?.dispose();
-          videoPlayerController.value?.dispose();
-          
-          // Initialize new video
-          _initializeVideo(videoUrl, videoPlayerController, chewieController);
+        if (authorVideos.length <= 1) return;
+        
+        final currentAuthorIndex = authorVideos.indexWhere((v) {
+          final id = v is Note ? v.id : (v as ShortFormPortraitVideo).id;
+          final currentId = currentVideo is Note ? currentVideo.id : (currentVideo as ShortFormPortraitVideo).id;
+          return id == currentId;
+        });
+        
+        int nextAuthorIndex;
+        if (details.primaryVelocity! < 0) {
+          // Swipe left - next video from same author
+          nextAuthorIndex = (currentAuthorIndex + 1) % authorVideos.length;
+        } else {
+          // Swipe right - previous video from same author
+          nextAuthorIndex = (currentAuthorIndex - 1 + authorVideos.length) % authorVideos.length;
+        }
+        
+        final nextVideo = authorVideos[nextAuthorIndex];
+        final nextGlobalIndex = allVideos.indexWhere((v) {
+          final id = v is Note ? v.id : (v as ShortFormPortraitVideo).id;
+          final nextId = nextVideo is Note ? nextVideo.id : (nextVideo as ShortFormPortraitVideo).id;
+          return id == nextId;
+        });
+        
+        if (nextGlobalIndex >= 0) {
+          pageController.animateToPage(
+            nextGlobalIndex,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }
       },
-      itemCount: videoNotes.length,
-      itemBuilder: (context, index) {
-        final video = videoNotes[index];
+      onVerticalDragEnd: (details) {
+        // Swipe up/down for different authors
+        final currentVideo = allVideos[currentVideoIndex.value];
+        final currentAuthor = currentVideo is Note ? (currentVideo.author.value?.pubkey ?? currentVideo.event.pubkey) : ((currentVideo as ShortFormPortraitVideo).author.value?.pubkey ?? currentVideo.event.pubkey);
+        final authors = videosByAuthor.keys.toList();
         
-        return Column(
-          children: [
-            // Video player
-            Expanded(
-              child: Container(
-                color: Colors.black,
-                child: chewieController.value != null
-                    ? Center(
-                        child: AspectRatio(
-                          aspectRatio: videoPlayerController.value?.value.aspectRatio ?? 16/9,
-                          child: Chewie(controller: chewieController.value!),
-                        ),
-                      )
-                    : const Center(child: CircularProgressIndicator()),
-              ),
-            ),
+        if (authors.length <= 1) return;
+        
+        final currentAuthorIndex = authors.indexOf(currentAuthor);
+        int nextAuthorIndex;
+        
+        if (details.primaryVelocity! < 0) {
+          // Swipe up - next author
+          nextAuthorIndex = (currentAuthorIndex + 1) % authors.length;
+        } else {
+          // Swipe down - previous author
+          nextAuthorIndex = (currentAuthorIndex - 1 + authors.length) % authors.length;
+        }
+        
+        final nextAuthor = authors[nextAuthorIndex];
+        final nextAuthorVideos = videosByAuthor[nextAuthor] ?? [];
+        
+        if (nextAuthorVideos.isNotEmpty) {
+          final nextVideo = nextAuthorVideos.first;
+          final nextGlobalIndex = allVideos.indexWhere((v) {
+            final id = v is Note ? v.id : (v as ShortFormPortraitVideo).id;
+            final nextId = nextVideo is Note ? nextVideo.id : (nextVideo as ShortFormPortraitVideo).id;
+            return id == nextId;
+          });
+          
+          if (nextGlobalIndex >= 0) {
+            pageController.animateToPage(
+              nextGlobalIndex,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        }
+      },
+      child: PageView.builder(
+        controller: pageController,
+        onPageChanged: (index) {
+          currentVideoIndex.value = index;
+          
+          // Initialize new video
+          final videoUrl = _getVideoUrl(allVideos[index]);
+          if (videoUrl != null) {
+            // Dispose previous controllers
+            chewieController.value?.dispose();
+            videoPlayerController.value?.dispose();
             
-            // Video info and engagement
-            Container(
-              color: Colors.black,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Description
-                  if (video.content.isNotEmpty)
-                    ParsedContentWidget(
-                      note: video,
-                      colorPair: [Colors.white, Colors.grey[300]!],
-                      onProfileTap: (pubkey) => context.push('/profile/$pubkey'),
-                      onHashtagTap: (hashtag) => context.push('/hashtag/$hashtag'),
-                    ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Engagement row
-                  EngagementRow(
-                    likesCount: 0,
-                    repostsCount: 0,
-                    zapsCount: 0,
-                    zapsSatAmount: 0,
-                    onLike: () {
-                      // TODO: Implement reaction
-                    },
-                    onRepost: () {
-                      // TODO: Implement repost
-                    },
-                    onZap: () {
-                      // TODO: Implement zap
-                    },
-                    isLiked: false,
-                    isReposted: false,
-                    isZapped: false,
-                    isLiking: false,
-                    isReposting: false,
-                    isZapping: false,
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  // Navigation indicator
-                  if (videoNotes.length > 1)
+            // Initialize new video
+            _initializeVideo(videoUrl, videoPlayerController, chewieController);
+          }
+        },
+        itemCount: allVideos.length,
+        itemBuilder: (context, index) {
+          final video = allVideos[index];
+          final isKind22 = video is ShortFormPortraitVideo;
+          
+          return Column(
+            children: [
+              // Video player
+              Expanded(
+                child: Container(
+                  color: Colors.black,
+                  child: chewieController.value != null
+                      ? Center(
+                          child: AspectRatio(
+                            aspectRatio: videoPlayerController.value?.value.aspectRatio ?? (isKind22 ? 9/16 : 16/9),
+                            child: Chewie(controller: chewieController.value!),
+                          ),
+                        )
+                      : const Center(child: CircularProgressIndicator()),
+                ),
+              ),
+              
+              // Video info and engagement
+              Container(
+                color: Colors.black,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Video type indicator
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          '${index + 1} of ${videoNotes.length}',
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 12,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isKind22 
+                                ? Colors.purple.withValues(alpha: 0.2)
+                                : Colors.blue.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            isKind22 ? 'Kind 22 - Short Video' : 'Kind 1 - Video Note',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: isKind22 ? Colors.purple[200] : Colors.blue[200],
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const Spacer(),
                         Text(
-                          'Swipe to navigate',
+                          'Swipe ↔ same user, ↕ different users',
                           style: TextStyle(
                             color: Colors.grey[500],
-                            fontSize: 11,
+                            fontSize: 10,
                           ),
                         ),
                       ],
                     ),
-                ],
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Description
+                    if (video is Note && video.content.isNotEmpty)
+                      ParsedContentWidget(
+                        note: video,
+                        colorPair: [Colors.white, Colors.grey[300]!],
+                        onProfileTap: (pubkey) => context.push('/profile/$pubkey'),
+                        onHashtagTap: (hashtag) => context.push('/hashtag/$hashtag'),
+                      )
+                    else if (video is ShortFormPortraitVideo && video.description.isNotEmpty)
+                      Text(
+                        video.description,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Engagement row with proper video event handling
+                    Consumer(
+                      builder: (context, ref, child) {
+                        // Query reactions, reposts and zaps for this video
+                        final videoEventId = video is Note ? video.id : (video as ShortFormPortraitVideo).id;
+                        
+                        final reactionsState = ref.watch(
+                          query<Reaction>(
+                            tags: {'#e': {videoEventId}},
+                            source: LocalAndRemoteSource(stream: true),
+                          ),
+                        );
+                        
+                        final repostsState = ref.watch(
+                          query<Repost>(
+                            tags: {'#e': {videoEventId}},
+                            source: LocalAndRemoteSource(stream: true),
+                          ),
+                        );
+                        
+                        final zapsState = ref.watch(
+                          query<Zap>(
+                            tags: {'#e': {videoEventId}},
+                            source: LocalAndRemoteSource(stream: true),
+                          ),
+                        );
+                        
+                        final reactions = reactionsState is StorageData ? reactionsState.models : <Reaction>[];
+                        final reposts = repostsState is StorageData ? repostsState.models : <Repost>[];
+                        final zaps = zapsState is StorageData ? zapsState.models : <Zap>[];
+                        
+                        final currentUser = ref.watch(currentUserPubkeyProvider);
+                        final isLiked = currentUser != null && reactions.any((r) => r.author.value?.pubkey == currentUser);
+                        final isReposted = currentUser != null && reposts.any((r) => r.author.value?.pubkey == currentUser);
+                        final isZapped = currentUser != null && zaps.any((z) => z.author.value?.pubkey == currentUser);
+                        
+                        return EngagementRow(
+                          likesCount: reactions.length,
+                          repostsCount: reposts.length,
+                          zapsCount: zaps.length,
+                          zapsSatAmount: zaps.fold(0, (sum, zap) => sum + (zap.amount ?? 0)),
+                          onLike: () => _handleLike(ref, videoEventId),
+                          onRepost: () => _handleRepost(ref, video),
+                          onZap: () => _handleZap(ref, videoEventId),
+                          isLiked: isLiked,
+                          isReposted: isReposted,
+                          isZapped: isZapped,
+                          isLiking: false,
+                          isReposting: false,
+                          isZapping: false,
+                        );
+                      },
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    // Navigation indicator
+                    if (allVideos.length > 1)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${index + 1} of ${allVideos.length}',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
-
-  String _extractDescription(String content) {
-    // Extract description (everything before the first HTTP URL)
-    final lines = content.split('\n');
-    final descriptionLines = <String>[];
-    
-    for (final line in lines) {
-      if (line.trim().startsWith('http')) {
-        break;
-      }
-      if (line.trim().isNotEmpty) {
-        descriptionLines.add(line.trim());
-      }
+  
+  String? _getVideoUrl(dynamic video) {
+    if (video is Note) {
+      return _extractVideoUrl(video);
+    } else if (video is ShortFormPortraitVideo) {
+      return video.videoUrl;
     }
-    
-    return descriptionLines.join(' ');
+    return null;
   }
+
 
   bool _hasVideoContent(Note note) {
     // Check for imeta tags with video URLs
@@ -315,6 +488,54 @@ class VideoDetailScreen extends HookConsumerWidget {
       chewieController.value = chewie;
     } catch (e) {
       debugPrint('Error initializing video: $e');
+    }
+  }
+  
+  Future<void> _handleLike(WidgetRef ref, String eventId) async {
+    try {
+      final activeSigner = ref.read(Signer.activeSignerProvider);
+      if (activeSigner == null) return;
+      
+      final reaction = PartialReaction(content: '+');
+      // Link to the event being reacted to
+      reaction.event.addTag('e', [eventId]);
+      final signedEvents = await activeSigner.sign([reaction]);
+      
+      await ref.read(storageNotifierProvider.notifier).save(signedEvents.toSet());
+      await ref.read(storageNotifierProvider.notifier).publish(signedEvents.toSet());
+    } catch (e) {
+      debugPrint('Error creating reaction: $e');
+    }
+  }
+  
+  Future<void> _handleRepost(WidgetRef ref, dynamic video) async {
+    try {
+      final activeSigner = ref.read(Signer.activeSignerProvider);
+      if (activeSigner == null) return;
+      
+      final eventId = video is Note ? video.id : (video as ShortFormPortraitVideo).id;
+      final authorPubkey = video is Note ? (video.author.value?.pubkey ?? video.event.pubkey) : ((video as ShortFormPortraitVideo).author.value?.pubkey ?? video.event.pubkey);
+      
+      final repost = PartialRepost();
+      repost.repostedNoteId = eventId;
+      repost.repostedNotePubkey = authorPubkey;
+      
+      final signedEvents = await activeSigner.sign([repost]);
+      
+      await ref.read(storageNotifierProvider.notifier).save(signedEvents.toSet());
+      await ref.read(storageNotifierProvider.notifier).publish(signedEvents.toSet());
+    } catch (e) {
+      debugPrint('Error creating repost: $e');
+    }
+  }
+  
+  Future<void> _handleZap(WidgetRef ref, String eventId) async {
+    try {
+      // For now, just show a placeholder message
+      // Full zap implementation requires Lightning wallet integration
+      debugPrint('Zap functionality requires Lightning wallet setup');
+    } catch (e) {
+      debugPrint('Error creating zap: $e');
     }
   }
 }
