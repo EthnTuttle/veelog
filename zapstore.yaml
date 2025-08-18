@@ -1,0 +1,10 @@
+identifier: com.ethntuttle.veelog
+name: veelog
+summary: A simple nostr vlogging application for short clips
+description: A simple nostr vlogging application for short clips
+repository: https://github.com/EthnTuttle/veelog
+homepage: https://github.com/EthnTuttle/veelog
+tags: nostr vlog video social freedom-tech
+license: MIT
+assets:
+  - app-arm64-v8a-release.apk
