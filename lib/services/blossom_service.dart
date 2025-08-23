@@ -221,8 +221,9 @@ class BlossomService {
 
       // Save and publish both events
       final allEvents = {...signedVideoEvents, ...signedNotes};
-      await ref.storage.save(allEvents);
-      await ref.storage.publish(allEvents);
+      final storageNotifier = ref.read(storageNotifierProvider.notifier);
+      await storageNotifier.save(allEvents);
+      await storageNotifier.publish(allEvents);
 
       debugPrint('Published independent NIP-71 video event (kind 22) and video note (kind 1)');
     } catch (e) {

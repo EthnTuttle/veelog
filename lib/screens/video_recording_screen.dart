@@ -27,7 +27,11 @@ class VideoRecordingScreen extends HookConsumerWidget {
     useEffect(() {
       _initializeCamera(cameraController, isInitialized, permissionGranted, cameras, currentCameraIndex, currentResolution, enableAudio);
       return () {
-        cameraController.value?.dispose();
+        final controller = cameraController.value;
+        if (controller != null) {
+          controller.dispose();
+          cameraController.value = null;
+        }
       };
     }, []);
 
@@ -511,6 +515,7 @@ class VideoRecordingScreen extends HookConsumerWidget {
     final currentController = cameraController.value;
     if (currentController != null) {
       await currentController.dispose();
+      cameraController.value = null;
     }
     
     isInitialized.value = false;
@@ -639,6 +644,7 @@ class VideoRecordingScreen extends HookConsumerWidget {
 
     try {
       await currentController.dispose();
+      cameraController.value = null;
       isInitialized.value = false;
       
       // Switch to next camera

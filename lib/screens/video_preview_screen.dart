@@ -286,7 +286,7 @@ class VideoPreviewScreen extends HookConsumerWidget {
 
   Future<String?> _showDescriptionDialog(BuildContext context) async {
     final controller = TextEditingController();
-    final previewText = useState('');
+    String previewText = '';
     
     return showDialog<String>(
       context: context,
@@ -311,7 +311,7 @@ class VideoPreviewScreen extends HookConsumerWidget {
                     controller: controller,
                     onChanged: (text) {
                       setState(() {
-                        previewText.value = text;
+                        previewText = text;
                       });
                     },
                     decoration: const InputDecoration(
@@ -366,12 +366,12 @@ class VideoPreviewScreen extends HookConsumerWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                previewText.value.isNotEmpty 
-                                    ? previewText.value 
+                                previewText.isNotEmpty 
+                                    ? previewText 
                                     : '[Video description]',
                                 style: TextStyle(
-                                  color: previewText.value.isNotEmpty ? Colors.black : Colors.grey[500],
-                                  fontStyle: previewText.value.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+                                  color: previewText.isNotEmpty ? Colors.black : Colors.grey[500],
+                                  fontStyle: previewText.isNotEmpty ? FontStyle.normal : FontStyle.italic,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -420,11 +420,11 @@ class VideoPreviewScreen extends HookConsumerWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Title: ${previewText.value.isNotEmpty ? previewText.value : "VeeLog Video"}',
+                                'Title: ${previewText.isNotEmpty ? previewText : "VeeLog Video"}',
                                 style: const TextStyle(fontSize: 12),
                               ),
                               Text(
-                                'Description: ${previewText.value.isNotEmpty ? previewText.value : "Video log"}',
+                                'Description: ${previewText.isNotEmpty ? previewText : "Video log"}',
                                 style: const TextStyle(fontSize: 12),
                               ),
                               Text(
