@@ -189,7 +189,7 @@ class SettingsScreen extends ConsumerWidget {
                 icon: Icons.favorite,
                 title: 'Powered by Purplestack',
                 subtitle: 'Nostr development framework',
-                onTap: () {},
+                onTap: () => _openPurpleStackSite(),
               ),
             ],
           ),
@@ -235,18 +235,18 @@ class SettingsScreen extends ConsumerWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: const Color(0xFF654321),
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFD2B48C), // Tan
+            color: Theme.of(context).colorScheme.surfaceContainer,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF8B4513).withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -280,21 +280,21 @@ class SettingsScreen extends ConsumerWidget {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          color: Color(0xFF654321),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
         subtitle,
         style: TextStyle(
-          color: const Color(0xFF8B4513).withValues(alpha: 0.8),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       trailing: Icon(
         Icons.arrow_forward_ios,
         size: 16,
-        color: const Color(0xFF8B4513).withValues(alpha: 0.6),
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
       onTap: onTap,
     );
@@ -310,29 +310,29 @@ class SettingsScreen extends ConsumerWidget {
           color: const Color(0xFF8B4513).withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.view_list,
-          color: Color(0xFF654321),
+          color: Theme.of(context).colorScheme.primary,
           size: 20,
         ),
       ),
-      title: const Text(
+      title: Text(
         'Display Mode',
         style: TextStyle(
-          color: Color(0xFF654321),
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
         _getDisplayModeLabel(currentMode),
         style: TextStyle(
-          color: const Color(0xFF8B4513).withValues(alpha: 0.8),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       trailing: Icon(
         Icons.arrow_forward_ios,
         size: 16,
-        color: const Color(0xFF8B4513).withValues(alpha: 0.6),
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
       onTap: () => _showDisplayModeDialog(context, ref),
     );
@@ -341,9 +341,7 @@ class SettingsScreen extends ConsumerWidget {
   String _getDisplayModeLabel(DisplayMode mode) {
     switch (mode) {
       case DisplayMode.robust:
-        return 'Robust - Maximum details';
-      case DisplayMode.detailed:
-        return 'Detailed - Rich information';
+        return 'Robust - Maximum video metadata';
       case DisplayMode.compact:
         return 'Compact - Minimal space';
       case DisplayMode.standard:
@@ -369,7 +367,7 @@ class SettingsScreen extends ConsumerWidget {
                   Navigator.of(context).pop();
                 }
               },
-              activeColor: const Color(0xFF654321),
+              activeColor: Theme.of(context).colorScheme.primary,
             );
           }).toList(),
         ),
@@ -394,6 +392,13 @@ class SettingsScreen extends ConsumerWidget {
   
   void _openGitHubRepo() async {
     const url = 'https://github.com/EthnTuttle/veelog';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
+  }
+  
+  void _openPurpleStackSite() async {
+    const url = 'https://github.com/purplebase/purplestack';
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     }

@@ -50,7 +50,7 @@ class FollowButton extends HookConsumerWidget {
                   orElse: () => callback,
                 ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF654321),
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
                   side: const BorderSide(color: Color(0xFF654321)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -71,7 +71,7 @@ class FollowButton extends HookConsumerWidget {
                   orElse: () => callback,
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF654321),
+                  backgroundColor: Theme.of(context).colorScheme.onSurface,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

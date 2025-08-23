@@ -4,7 +4,6 @@ import 'package:veelog/providers/nip05_provider.dart';
 
 enum AppTheme {
   wood,
-  freedom,
   nostr,
   bitcoin,
 }
@@ -35,21 +34,6 @@ class AppThemes {
     ),
   );
 
-  static ThemeData get freedomTheme => ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF1E3A8A), // Deep blue
-      brightness: Brightness.light,
-    ).copyWith(
-      surface: const Color(0xFFF8F9FA), // Off white
-      onSurface: const Color(0xFF1E3A8A), // Deep blue
-      primary: const Color(0xFF1E3A8A), // Deep blue
-      secondary: const Color(0xFFDC2626), // Red
-      tertiary: const Color(0xFFFFFFFF), // White
-      error: const Color(0xFFDC2626), // Red
-    ),
-  );
-
   static ThemeData get woodDarkTheme => ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
@@ -60,20 +44,6 @@ class AppThemes {
       onSurface: const Color(0xFFF5DEB3), // Light wheat
       primary: const Color(0xFFD2B48C), // Tan
       secondary: const Color(0xFF8B4513), // Wood brown
-    ),
-  );
-
-  static ThemeData get freedomDarkTheme => ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF1E3A8A),
-      brightness: Brightness.dark,
-    ).copyWith(
-      surface: const Color(0xFF0F172A), // Dark navy
-      onSurface: const Color(0xFFFFFFFF), // White
-      primary: const Color(0xFF3B82F6), // Bright blue
-      secondary: const Color(0xFFEF4444), // Bright red
-      tertiary: const Color(0xFFFFFFFF), // White
     ),
   );
 

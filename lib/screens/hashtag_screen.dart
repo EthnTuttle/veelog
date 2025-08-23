@@ -23,11 +23,11 @@ class HashtagScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5DEB3),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text('#$hashtag'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -60,7 +60,7 @@ class HashtagScreen extends ConsumerWidget {
           Icon(
             Icons.tag,
             size: 64,
-            color: const Color(0xFF654321),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
           const SizedBox(height: 16),
           Text(
@@ -80,7 +80,7 @@ class HashtagScreen extends ConsumerWidget {
   Widget _buildNoteCard(BuildContext context, Note note, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: const Color(0xFFD2B48C),
+      color: Theme.of(context).colorScheme.surfaceContainer,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -124,13 +124,13 @@ class HashtagScreen extends ConsumerWidget {
                 IconButton(
                   onPressed: () => context.push('/profile/${note.author.value?.pubkey ?? note.event.pubkey}'),
                   icon: const Icon(Icons.person, size: 20),
-                  color: const Color(0xFF654321),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 if (_hasVideoContent(note))
                   IconButton(
                     onPressed: () => context.push('/video/${note.id}', extra: note),
                     icon: const Icon(Icons.play_circle, size: 20),
-                    color: const Color(0xFF654321),
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
               ],
             ),

@@ -13,11 +13,11 @@ class ThemeSettingsScreen extends ConsumerWidget {
     final currentTheme = ref.watch(themeProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5DEB3),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('Theme Settings'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -39,11 +39,11 @@ class ThemeSettingsScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFD2B48C),
+              color: Theme.of(context).colorScheme.secondaryContainer,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF8B4513).withValues(alpha: 0.2),
+                  color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -73,7 +73,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
                 Text(
                   'Premium themes unlocked for virginiafreedom.tech users',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF654321).withValues(alpha: 0.8),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -85,7 +85,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
         Text(
           'Available Themes',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: const Color(0xFF654321),
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -107,20 +107,6 @@ class ThemeSettingsScreen extends ConsumerWidget {
         ),
         
         const SizedBox(height: 12),
-        
-        // Freedom Theme (requires verification)
-        _buildThemeCard(
-          context,
-          ref,
-          AppTheme.freedom,
-          'Freedom Theme',
-          'Patriotic red, white, and blue design',
-          const Color(0xFF1E3A8A),
-          const Color(0xFFDC2626),
-          const Color(0xFFFFFFFF),
-          currentTheme == AppTheme.freedom,
-          isVerified,
-        ),
         
         const SizedBox(height: 12),
         
@@ -176,14 +162,14 @@ class ThemeSettingsScreen extends ConsumerWidget {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFD2B48C),
+        color: Theme.of(context).colorScheme.secondaryContainer,
         borderRadius: BorderRadius.circular(16),
         border: isSelected 
-            ? Border.all(color: const Color(0xFF654321), width: 2)
+            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
             : null,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8B4513).withValues(alpha: 0.1),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -228,7 +214,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
             Text(
               title,
               style: TextStyle(
-                color: isEnabled ? const Color(0xFF654321) : const Color(0xFF654321).withValues(alpha: 0.5),
+                color: isEnabled ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -237,7 +223,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
               Icon(
                 Icons.lock,
                 size: 16,
-                color: const Color(0xFF654321).withValues(alpha: 0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ],
           ],
@@ -246,14 +232,14 @@ class ThemeSettingsScreen extends ConsumerWidget {
           description,
           style: TextStyle(
             color: isEnabled 
-                ? const Color(0xFF8B4513).withValues(alpha: 0.8)
-                : const Color(0xFF8B4513).withValues(alpha: 0.5),
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
         trailing: isSelected
             ? Icon(
                 Icons.check_circle,
-                color: const Color(0xFF654321),
+                color: Theme.of(context).colorScheme.primary,
               )
             : null,
         onTap: isEnabled

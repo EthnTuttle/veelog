@@ -13,11 +13,11 @@ class VideoQualityScreen extends ConsumerWidget {
     final currentQuality = ref.watch(videoQualityProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5DEB3),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('Video Quality'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -42,11 +42,11 @@ class VideoQualityScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: const Color(0xFFD2B48C),
+              color: Theme.of(context).colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF8B4513).withValues(alpha: 0.2),
+                  color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -57,13 +57,13 @@ class VideoQualityScreen extends ConsumerWidget {
                 Icon(
                   Icons.verified_user,
                   size: 64,
-                  color: const Color(0xFF654321),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 24),
                 Text(
                   'NIP-05 Verification Required',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: const Color(0xFF654321),
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
@@ -78,13 +78,13 @@ class VideoQualityScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B4513).withValues(alpha: 0.2),
+                    color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     'virginiafreedom.tech',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: const Color(0xFF654321),
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'monospace',
                     ),
@@ -94,7 +94,7 @@ class VideoQualityScreen extends ConsumerWidget {
                 Text(
                   'This helps ensure video quality features are used responsibly by verified community members.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF654321).withValues(alpha: 0.8),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -102,7 +102,7 @@ class VideoQualityScreen extends ConsumerWidget {
                 ElevatedButton(
                   onPressed: () => context.pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF654321),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Back to Settings'),
@@ -122,11 +122,11 @@ class VideoQualityScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFFD2B48C),
+            color: Theme.of(context).colorScheme.surfaceContainer,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF8B4513).withValues(alpha: 0.2),
+                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -156,7 +156,7 @@ class VideoQualityScreen extends ConsumerWidget {
               Text(
                 'Advanced video settings unlocked for virginiafreedom.tech users',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF654321).withValues(alpha: 0.8),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -168,7 +168,7 @@ class VideoQualityScreen extends ConsumerWidget {
         Text(
           'Video Quality',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: const Color(0xFF654321),
+            color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -180,24 +180,24 @@ class VideoQualityScreen extends ConsumerWidget {
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFD2B48C),
+              color: Theme.of(context).colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(12),
               border: isSelected 
-                  ? Border.all(color: const Color(0xFF654321), width: 2)
+                  ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
                   : null,
             ),
             child: RadioListTile<VideoQualityLevel>(
               title: Text(
                 VideoQualitySettings.getQualityLabel(quality),
                 style: TextStyle(
-                  color: const Color(0xFF654321),
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
               subtitle: Text(
                 VideoQualitySettings.getQualityDescription(quality),
                 style: TextStyle(
-                  color: const Color(0xFF8B4513).withValues(alpha: 0.8),
+                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
                 ),
               ),
               value: quality,
@@ -207,7 +207,7 @@ class VideoQualityScreen extends ConsumerWidget {
                   ref.read(videoQualityProvider.notifier).state = value;
                 }
               },
-              activeColor: const Color(0xFF654321),
+              activeColor: Theme.of(context).colorScheme.primary,
             ),
           );
         }).toList(),

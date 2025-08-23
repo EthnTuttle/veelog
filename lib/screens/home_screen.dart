@@ -43,21 +43,20 @@ class HomeScreen extends HookConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5DEB3), // Wheat background
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Row(
           children: [
             const Text('VeeLog'),
             const SizedBox(width: 8),
-            Icon(
-              Icons.home,
-              size: 20,
-              color: Colors.white,
+            const Text(
+              '🪵',
+              style: TextStyle(fontSize: 20),
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF8B4513), // Wood brown
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -231,8 +230,6 @@ class HomeScreen extends HookConsumerWidget {
     switch (displayMode) {
       case DisplayMode.compact:
         return _buildCompactCard(context, video, description, videoUrl, createdAt, videoId);
-      case DisplayMode.detailed:
-        return _buildDetailedCard(context, video, description, videoUrl, createdAt, videoId, authorPubkey);
       case DisplayMode.robust:
         return _buildRobustCard(context, video, description, videoUrl, createdAt, videoId, authorPubkey);
       case DisplayMode.standard:
@@ -243,7 +240,7 @@ class HomeScreen extends HookConsumerWidget {
   Widget _buildStandardCard(BuildContext context, dynamic video, String description, String? videoUrl, DateTime createdAt, String videoId) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: const Color(0xFFD2B48C), // Tan
+      color: Theme.of(context).colorScheme.surfaceContainer,
       child: ListTile(
         leading: _buildVideoThumbnailFromUrl(videoUrl),
         title: Text(
@@ -256,7 +253,7 @@ class HomeScreen extends HookConsumerWidget {
             Icon(
               video is ShortFormPortraitVideo ? Icons.video_collection : Icons.videocam,
               size: 14,
-              color: const Color(0xFF654321),
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: 4),
             Text(
@@ -278,7 +275,7 @@ class HomeScreen extends HookConsumerWidget {
   Widget _buildCompactCard(BuildContext context, dynamic video, String description, String? videoUrl, DateTime createdAt, String videoId) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: const Color(0xFFD2B48C),
+      color: Theme.of(context).colorScheme.surfaceContainer,
       child: ListTile(
         dense: true,
         leading: Container(
@@ -309,83 +306,17 @@ class HomeScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildDetailedCard(BuildContext context, dynamic video, String description, String? videoUrl, DateTime createdAt, String videoId, String authorPubkey) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      color: const Color(0xFFD2B48C),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _buildVideoThumbnailFromUrl(videoUrl),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        description.isNotEmpty ? description : 'Video post',
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            video is ShortFormPortraitVideo ? Icons.video_collection : Icons.videocam,
-                            size: 16,
-                            color: const Color(0xFF654321),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            video is ShortFormPortraitVideo ? 'Short Video (Kind 22)' : 'Video Note (Kind 1)',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _formatTimeAgo(createdAt),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                ElevatedButton(
-                  onPressed: () => _navigateToVideo(context, video, videoId),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF654321),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(80, 32),
-                  ),
-                  child: const Text('Watch'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildRobustCard(BuildContext context, dynamic video, String description, String? videoUrl, DateTime createdAt, String videoId, String authorPubkey) {
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
-      color: const Color(0xFFD2B48C),
+      color: Theme.of(context).colorScheme.surfaceContainer,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with author info and event metadata
             Row(
               children: [
                 Consumer(
@@ -394,7 +325,7 @@ class HomeScreen extends HookConsumerWidget {
                     final author = authorState is StorageData ? authorState.models.firstOrNull : null;
                     return ProfileAvatar(
                       profile: author,
-                      radius: 20,
+                      radius: 24,
                     );
                   },
                 ),
@@ -409,9 +340,9 @@ class HomeScreen extends HookConsumerWidget {
                           final author = authorState is StorageData ? authorState.models.firstOrNull : null;
                           return Text(
                             author?.nameOrNpub ?? 'Unknown',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF654321),
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           );
                         },
@@ -420,85 +351,231 @@ class HomeScreen extends HookConsumerWidget {
                         Utils.encodeShareableFromString(authorPubkey, type: 'npub'),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontFamily: 'monospace',
-                          color: const Color(0xFF8B4513).withValues(alpha: 0.8),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Icon(
-                      video is ShortFormPortraitVideo ? Icons.video_collection : Icons.videocam,
-                      size: 16,
-                      color: const Color(0xFF654321),
-                    ),
-                    const SizedBox(width: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: video is ShortFormPortraitVideo 
-                            ? const Color(0xFF654321).withValues(alpha: 0.2)
-                            : const Color(0xFF8B4513).withValues(alpha: 0.2),
+                            ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2)
+                            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        video is ShortFormPortraitVideo ? 'Kind 22' : 'Kind 1',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF654321),
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            video is ShortFormPortraitVideo ? Icons.video_collection : Icons.videocam,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            video is ShortFormPortraitVideo ? 'Kind 22' : 'Kind 1',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatTimeAgo(createdAt),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ],
             ),
+            
             const SizedBox(height: 16),
+            
+            // Event ID and technical details
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.fingerprint,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Event ID:',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    Utils.encodeShareableFromString(videoId, type: 'note'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Published: ${createdAt.toLocal().toString().substring(0, 19)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (videoUrl != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.link,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Video URL: ${videoUrl.length > 50 ? videoUrl.substring(0, 50) + '...' : videoUrl}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.tag,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Type: ${video is ShortFormPortraitVideo ? 'Short Form Portrait Video (NIP-71)' : 'Video Note with imeta tags (NIP-92)'}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Video thumbnail
             Container(
               width: double.infinity,
-              height: 200,
+              height: 220,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                ),
               ),
-              child: _buildVideoThumbnailFromUrl(videoUrl, width: double.infinity, height: 200),
+              child: _buildVideoThumbnailFromUrl(videoUrl, width: double.infinity, height: 220),
             ),
-            const SizedBox(height: 12),
-            Text(
-              description.isNotEmpty ? description : 'Video post',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 12),
+            
+            const SizedBox(height: 16),
+            
+            // Description
+            if (description.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            
+            const SizedBox(height: 16),
+            
+            // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  _formatTimeAgo(createdAt),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
                 Row(
                   children: [
                     IconButton(
                       onPressed: () {},
-                      icon: const Icon(Icons.favorite_border, size: 20),
-                      color: const Color(0xFF654321),
+                      icon: const Icon(Icons.favorite_border, size: 22),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     IconButton(
                       onPressed: () {},
-                      icon: const Icon(Icons.share, size: 20),
-                      color: const Color(0xFF654321),
+                      icon: const Icon(Icons.repeat, size: 22),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    ElevatedButton(
-                      onPressed: () => _navigateToVideo(context, video, videoId),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF654321),
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(80, 36),
-                      ),
-                      child: const Text('Watch'),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.flash_on, size: 22),
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.share, size: 22),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ],
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => _navigateToVideo(context, video, videoId),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    minimumSize: const Size(100, 40),
+                  ),
+                  icon: const Icon(Icons.play_arrow, size: 20),
+                  label: const Text('Watch'),
                 ),
               ],
             ),

@@ -40,7 +40,6 @@ class VeelogApp extends ConsumerWidget {
     final appTheme = ref.watch(themeProvider);
     final theme = switch (appTheme) {
       AppTheme.wood => AppThemes.woodTheme,
-      AppTheme.freedom => AppThemes.freedomTheme,
       AppTheme.nostr => AppThemes.nostrTheme,
       AppTheme.bitcoin => AppThemes.bitcoinTheme,
     };

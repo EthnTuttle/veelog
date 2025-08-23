@@ -21,7 +21,7 @@ class AuthScreen extends HookConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF8B4513), // Wood brown background
+      backgroundColor: Theme.of(context).colorScheme.primary, // Wood brown background
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -32,7 +32,7 @@ class AuthScreen extends HookConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD2B48C), // Tan wood color
+                  color: Theme.of(context).colorScheme.surfaceContainer, // Tan wood color
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -52,7 +52,7 @@ class AuthScreen extends HookConsumerWidget {
                     Text(
                       'VeeLog',
                       style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: const Color(0xFF654321), // Dark wood
+                        color: Theme.of(context).colorScheme.onSurface, // Dark wood
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -60,7 +60,7 @@ class AuthScreen extends HookConsumerWidget {
                     Text(
                       'Nostr Video Logging',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: const Color(0xFF8B4513), // Medium wood
+                        color: Theme.of(context).colorScheme.primary, // Medium wood
                       ),
                     ),
                   ],
@@ -118,7 +118,7 @@ class AuthScreen extends HookConsumerWidget {
                     return ElevatedButton(
                       onPressed: callback,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF654321), // Dark wood
+                        backgroundColor: Theme.of(context).colorScheme.onSurface, // Dark wood
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -163,7 +163,7 @@ class AuthScreen extends HookConsumerWidget {
                       ? 'Hide Developer Options' 
                       : 'Developer Options',
                   style: TextStyle(
-                    color: const Color(0xFFD2B48C), // Tan
+                    color: Theme.of(context).colorScheme.surfaceContainer, // Tan
                     decoration: TextDecoration.underline,
                   ),
                 ),
@@ -214,18 +214,18 @@ class AuthScreen extends HookConsumerWidget {
                     labelText: 'Private Key (nsec...)',
                     hintText: 'nsec1...',
                     filled: true,
-                    fillColor: const Color(0xFFD2B48C).withValues(alpha: 0.2),
+                    fillColor: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.2),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: const Color(0xFF654321)),
+                      borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: const Color(0xFF654321), width: 2),
+                      borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface, width: 2),
                     ),
                   ),
                   obscureText: true,
-                  style: const TextStyle(color: Color(0xFF654321)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 ),
                 
                 const SizedBox(height: 16),
@@ -246,7 +246,7 @@ class AuthScreen extends HookConsumerWidget {
                       return ElevatedButton(
                         onPressed: callback,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8B4513), // Medium wood
+                          backgroundColor: Theme.of(context).colorScheme.primary, // Medium wood
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -285,7 +285,7 @@ class AuthScreen extends HookConsumerWidget {
                 'Sign in to start sharing your video logs with the Nostr community',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFFD2B48C), // Tan
+                  color: Theme.of(context).colorScheme.surfaceContainer, // Tan
                 ),
               ),
             ],

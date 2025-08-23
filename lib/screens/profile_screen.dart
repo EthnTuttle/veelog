@@ -100,8 +100,8 @@ class ProfileScreen extends HookConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF8B4513).withValues(alpha: 0.8),
-                    const Color(0xFF654321).withValues(alpha: 0.8),
+                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                   ],
                 ),
               ),

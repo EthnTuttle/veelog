@@ -12,11 +12,11 @@ class BlossomSettingsScreen extends HookConsumerWidget {
     final notifier = ref.read(blossomConfigProvider.notifier);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5DEB3), // Wheat background
+      backgroundColor: Theme.of(context).colorScheme.surface, // Wheat background
       appBar: AppBar(
         title: const Text('Blossom Servers'),
-        backgroundColor: const Color(0xFF8B4513), // Wood brown
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary, // Wood brown
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -41,10 +41,10 @@ class BlossomSettingsScreen extends HookConsumerWidget {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFD2B48C), // Tan
+              color: Theme.of(context).colorScheme.surfaceContainer, // Tan
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF8B4513).withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
               ),
             ),
             child: Column(
@@ -54,14 +54,14 @@ class BlossomSettingsScreen extends HookConsumerWidget {
                   children: [
                     Icon(
                       Icons.info_outline,
-                      color: const Color(0xFF654321),
+                      color: Theme.of(context).colorScheme.onSurface,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Upload Strategy',
                       style: TextStyle(
-                        color: const Color(0xFF654321),
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -71,7 +71,7 @@ class BlossomSettingsScreen extends HookConsumerWidget {
                 Text(
                   'Videos are uploaded to all enabled servers in parallel. The first successful upload is used.',
                   style: TextStyle(
-                    color: const Color(0xFF8B4513).withValues(alpha: 0.8),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                     fontSize: 13,
                   ),
                 ),
@@ -89,12 +89,12 @@ class BlossomSettingsScreen extends HookConsumerWidget {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD2B48C), // Tan
+                    color: Theme.of(context).colorScheme.surfaceContainer, // Tan
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: server.enabled 
-                          ? const Color(0xFF654321).withValues(alpha: 0.3)
-                          : const Color(0xFF8B4513).withValues(alpha: 0.2),
+                          ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
+                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                     ),
                   ),
                   child: ListTile(
@@ -102,22 +102,22 @@ class BlossomSettingsScreen extends HookConsumerWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: server.enabled 
-                            ? const Color(0xFF654321).withValues(alpha: 0.2)
-                            : const Color(0xFF8B4513).withValues(alpha: 0.1),
+                            ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)
+                            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         server.enabled ? Icons.cloud_upload : Icons.cloud_off,
                         color: server.enabled 
-                            ? const Color(0xFF654321)
-                            : const Color(0xFF8B4513).withValues(alpha: 0.5),
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                         size: 20,
                       ),
                     ),
                     title: Text(
                       server.name,
                       style: TextStyle(
-                        color: const Color(0xFF654321),
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -127,7 +127,7 @@ class BlossomSettingsScreen extends HookConsumerWidget {
                         Text(
                           server.url,
                           style: TextStyle(
-                            color: const Color(0xFF8B4513).withValues(alpha: 0.8),
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                             fontSize: 12,
                           ),
                         ),
@@ -135,7 +135,7 @@ class BlossomSettingsScreen extends HookConsumerWidget {
                           Text(
                             'Requires authentication',
                             style: TextStyle(
-                              color: const Color(0xFF8B4513).withValues(alpha: 0.6),
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
                               fontSize: 11,
                               fontStyle: FontStyle.italic,
                             ),
@@ -145,8 +145,8 @@ class BlossomSettingsScreen extends HookConsumerWidget {
                     trailing: Switch(
                       value: server.enabled,
                       onChanged: (value) => notifier.toggleServer(index),
-                      activeThumbColor: const Color(0xFF654321),
-                      activeTrackColor: const Color(0xFF654321).withValues(alpha: 0.3),
+                      activeThumbColor: Theme.of(context).colorScheme.onSurface,
+                      activeTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                   ),
                 );
@@ -164,7 +164,7 @@ class BlossomSettingsScreen extends HookConsumerWidget {
                 icon: const Icon(Icons.add),
                 label: const Text('Add Custom Server'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF654321),
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
                   side: const BorderSide(color: Color(0xFF654321)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
